@@ -29,6 +29,17 @@ body {
   border: 1px solid white;
   transition: 0.3s;
   overflow: hidden;
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  z-index: 10;
+  background: black;
+  border-radius: 10px;
+}
+
+.modal__inner {
+  width: 100%;
+  height: 100%;
 }
 
 .screen {
@@ -57,9 +68,26 @@ body {
   opacity: 1;
   transform: translateY(0px);
 }
-
 /* Animation END */
 
+.displayNone {
+  display: none;
+}
+
+.displayBlock {
+  display: block;
+}
+
+.closeModal {
+  position: absolute;
+  top: 0rem;
+  right: 1rem;
+  color: #fff;
+  font-size: 2rem;
+  cursor: pointer;
+}
+
+/* Need for tests */
 .screen h2,
 .screen h1 {
   margin: 0;

@@ -1,14 +1,16 @@
 
 class Modal {
-    constructor({ container = document.body, screens, timing = 300 }) {
+    constructor({ container = document.body, screens, overflows, timing = 300 }) {
         this.container = container;
         this.screens = [...screens];
+        this.overflows = [...overflows];
         this.root = null;
         this.timing = timing;
         this.visibleScreen = null;
         this.renderedScreens = [];
         this.modalIsOpen = false;
         this.createRoot();
+        this.renderOverflows();
         this.renderScreens();
     }
 
@@ -32,21 +34,42 @@ class Modal {
         return section;
     }
 
+    createOverflow(overflow) {
+        const of = document.createElement('div');
+        of.style = overflow.style;
+        typeof overflow.modal === 'array' ? [...overflow.className].forEach(item => of.classList.add(item)) : of.classList.add(overflow.className);
+        of.innerHTML = overflow.html;
+        overflow.script && overflow.script(this, of);
+        return of;
+    }
+
     createRoot() {
         const { container } = this;
         const modal = document.createElement('div');
+        const innerModal = document.createElement('div');
         modal.classList.add('modal__root');
         modal.style = 'display:none';
         modal.classList.add('rootHidden');
+        innerModal.classList.add('modal__inner');
+        modal.append(innerModal);
         container.append(modal);
-        this.root = modal;
+        this.root = { modal, innerModal };
     }
+
+    renderOverflows() {
+        const { root, overflows } = this;
+        overflows.forEach(item => {
+            const of = this.createOverflow(item);
+            root.modal.append(of);
+        })
+    }
+
     renderScreens() {
         const { root, screens } = this;
         this.renderedScreens = [];
         screens.forEach((item, index) => {
             this.renderedScreens.push({ screen: this.createScreen(item, index), script: item.script });
-            root.append(this.renderedScreens[index].screen);
+            root.innerModal.append(this.renderedScreens[index].screen);
         });
     }
 
@@ -61,23 +84,23 @@ class Modal {
         const { root, welcomeScreen } = this;
         if (!this.modalIsOpen) {
 
-            root.style.display = 'block';
+            root.modal.style.display = 'block';
             setTimeout(() => {
-                root.classList.add('rootVisible');
-                root.classList.remove('rootHidden');
+                root.modal.classList.add('rootVisible');
+                root.modal.classList.remove('rootHidden');
             }, 20);
             this.changeScreen(welcomeScreen.screen.getAttribute('data-name'));
-            welcomeScreen.script(this, welcomeScreen.screen);
+            welcomeScreen.script && welcomeScreen.script(this, welcomeScreen.screen);
             this.modalIsOpen = true;
         }
     }
 
     closeModal() {
         const { root, timing } = this;
-        root.classList.add('rootHidden');
-        root.classList.remove('rootVisible');
+        root.modal.classList.add('rootHidden');
+        root.modal.classList.remove('rootVisible');
         setTimeout(() => {
-            root.style.display = 'none';
+            root.modal.style.display = 'none';
         }, timing);
         this.modalIsOpen = false;
     }
@@ -118,6 +141,19 @@ class Modal {
 // Execute
 
 const popup = new Modal({
+    overflows: [
+        {
+            name: 'closeButton',
+            html: 'x',
+            className: 'closeModal',
+            // style: 'background-color:red',
+            script(modal, overflow) {
+                overflow.addEventListener('click', () => {
+                    modal.closeModal();
+                })
+            }
+        }
+    ],
     screens: [
         {
             name: 'welcomeScreen',
@@ -138,6 +174,7 @@ const popup = new Modal({
             </div>
             `,
             script(modal, section) {
+                console.log('yooohoo')
                 section.querySelector('.next').addEventListener('click', () => { modal.changeScreen('secondScreen') });
             }
         },
@@ -172,7 +209,7 @@ const popup = new Modal({
             name: 'byeScreen',
             html: `
                 <h2>ByeBye</h2>
-                <button>Click me!</button>
+                <button>Close me!</button>
             `,
             script(modal, section) {
                 section.querySelector('button').addEventListener('click', () => {
@@ -180,5 +217,5 @@ const popup = new Modal({
                 });
             },
         }
-    ]
+    ],
 })
