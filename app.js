@@ -26,6 +26,7 @@ class Modal {
             section.style = 'opacity:0; display: none';
             return section;
         }
+        screen.script(this, section);
         this.visibleScreen = index;
         return section;
     }
@@ -66,7 +67,8 @@ class Modal {
     }
 
     findScreen(name) {
-        return this.renderedScreens.find(item => item.screen.getAttribute('data-name') === name)
+        const newScreen = this.renderedScreens.find(item => item.screen.getAttribute('data-name') === name)
+        return newScreen
     }
 
     changeScreen(name) {
@@ -76,7 +78,7 @@ class Modal {
             this.showScreen(newScreen.screen);
             this.visibleScreen = newScreen.screen.getAttribute('data-id');
         })
-        newScreen.script(this);
+        newScreen.script(this, newScreen.screen);
 
     }
 
@@ -91,18 +93,57 @@ const popup = new Modal({
             visible: true,
             script(modal) {
                 setTimeout(() => {
-                    modal.changeScreen('byeScreen')
+                    modal.changeScreen('firstScreen')
                 }, 5000)
+            }
+        },
+        {
+            name: 'firstScreen',
+            html: `
+            <h2>First screen</h2>
+            <div class="actions">
+            <button class="next">Next</button>
+            </div>
+            `,
+            script(modal, section, script) {
+                section.querySelector('.next').addEventListener('click', () => { modal.changeScreen('secondScreen') });
+            }
+        },
+        {
+            name: 'secondScreen',
+            html: `
+            <h2>Secon screen</h2>
+            <div class="actions">
+            <button class="prev">Pev</button>
+            <button class="next">Next</button>
+            </div>
+            `,
+            script(modal, section, script) {
+                section.querySelector('.prev').addEventListener('click', () => { modal.changeScreen('firstScreen') });
+                section.querySelector('.next').addEventListener('click', () => { modal.changeScreen('thirdScreen') });
+            }
+        }, {
+            name: 'thirdScreen',
+            html: `
+            <h2>Third screen</h2>
+            <div class="actions">
+            <button class="prev">Prev</button>
+            <button class="finish">Finish</button>
+            </div>
+            `,
+            script(modal, section, script) {
+                section.querySelector('.prev').addEventListener('click', () => { modal.changeScreen('secondScreen') });
+                section.querySelector('.finish').addEventListener('click', () => { modal.changeScreen('byeScreen') });
             }
         },
         {
             name: 'byeScreen',
             html: `
-                <h2>Bye</h2>
+                <h2>ByeBye</h2>
                 <button>Click me!</button>
             `,
-            script(modal) {
-                this.screen.querySelector('button').addEventListener('click', () => {
+            script(modal, section, script) {
+                section.querySelector('button').addEventListener('click', () => {
                     modal.changeScreen('welcomeScreen');
                 });
             },
@@ -110,4 +151,4 @@ const popup = new Modal({
     ]
 })
 
-setTimeout(() => { popup.changeScreen('byeScreen') }, 2000);
+// setTimeout(() => { popup.changeScreen('byeScreen') }, 2000);
